@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Number Hygiene Essentials</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #e8175d;
+      color: #fff;
+      padding: 24px 32px;
+    }
+    header h1 { font-size: 1.6rem; font-weight: 700; }
+    header p { font-size: 0.9rem; opacity: 0.85; margin-top: 4px; }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    input[type="date"],
+    input[type="tel"],
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #e8175d; }
+
+    .row { display: flex; gap: 12px; align-items: flex-end; }
+    .row input { flex: 1; }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      white-space: nowrap;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary { background: #e8175d; color: #fff; }
+    .btn-primary:not(:disabled):hover { background: #c41250; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .btn-secondary:not(:disabled):hover { background: #e0e0e0; }
+    .btn-success { background: #4caf50; color: #fff; }
+    .btn-success:not(:disabled):hover { background: #388e3c; }
+
+    /* Single check result */
+    #singleResult {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    #singleResult.result-approve { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    #singleResult.result-remove  { background: #fce4ec; color: #b71c1c; border: 1px solid #ef9a9a; }
+    #singleResult.result-loading { background: #f5f5f5; color: #666; border: 1px solid #ddd; }
+
+    /* Drop zone */
+    #dropZone {
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      color: #888;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, background 0.2s;
+      user-select: none;
+    }
+    #dropZone:hover, #dropZone.drag-over {
+      border-color: #e8175d;
+      background: #fff0f4;
+      color: #e8175d;
+    }
+    #dropZone .icon { font-size: 2rem; margin-bottom: 8px; }
+    #csvPreview {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #555;
+    }
+    #csvPreview .preview-numbers {
+      margin-top: 6px;
+      font-family: monospace;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 8px 12px;
+      max-height: 100px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      color: #444;
+    }
+    .process-row { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+
+    /* Dashboard */
+    #dashboard { display: none; }
+    .progress-wrap {
+      background: #f0f0f0;
+      border-radius: 99px;
+      height: 12px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    #progressFill {
+      height: 100%;
+      background: #e8175d;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    #progressLabel { font-size: 0.85rem; color: #666; margin-bottom: 20px; }
+
+    .dashboard-body {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .chart-wrap { flex: 0 0 220px; }
+    .chart-wrap canvas { max-width: 220px; max-height: 220px; }
+
+    .counters {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      min-width: 200px;
+    }
+    .counter {
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .counter span { display: block; font-size: 0.75rem; font-weight: 500; margin-top: 2px; opacity: 0.75; }
+    .counter.approved  { background: #e8f5e9; color: #2e7d32; }
+    .counter.nonmobile { background: #fff3e0; color: #e65100; }
+    .counter.inactive  { background: #e8eaf6; color: #283593; }
+    .counter.reassigned{ background: #fce4ec; color: #880e4f; }
+    .counter.errors    { background: #f5f5f5; color: #616161; }
+
+    /* Results table */
+    #resultsPanel { display: none; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      background: #f9f9f9;
+      border-bottom: 2px solid #eee;
+      font-weight: 600;
+      color: #444;
+      white-space: nowrap;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .decision-approve { color: #2e7d32; font-weight: 600; }
+    .decision-remove  { color: #b71c1c; font-weight: 600; }
+
+    .results-footer { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+    .results-summary { font-size: 0.85rem; color: #666; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Number Hygiene Essentials</h1>
+  <p>Twilio Lookup v2 — 3-stage compliance scrubber</p>
+</header>
+
+<main>
+
+  <!-- Config -->
+  <div class="card">
+    <h2>Configuration</h2>
+    <label for="lastVerifiedDate">Last Verified Date <em style="font-weight:400;color:#999">(required for Reassigned Number check — Step 3)</em></label>
+    <input type="date" id="lastVerifiedDate" style="max-width:240px" />
+  </div>
+
+  <!-- Single check -->
+  <div class="card">
+    <h2>Single Number Check</h2>
+    <div class="row">
+      <div style="flex:1">
+        <label for="singleNumber">Phone Number (E.164 format)</label>
+        <input type="tel" id="singleNumber" placeholder="+15005550006" />
+      </div>
+      <button class="btn-primary" id="checkBtn" onclick="checkSingleNumber()">Check</button>
+    </div>
+    <div id="singleResult"></div>
+  </div>
+
+  <!-- CSV upload -->
+  <div class="card">
+    <h2>Batch Upload</h2>
+    <div id="dropZone">
+      <div class="icon">&#128196;</div>
+      <strong>Drag &amp; drop a CSV file here</strong><br />
+      or click to browse &mdash; first column must contain phone numbers &mdash; max 100 rows
+      <input type="file" id="csvFile" accept=".csv" hidden />
+    </div>
+    <div id="csvPreview"></div>
+    <div class="process-row">
+      <button class="btn-primary" id="processBtn" disabled onclick="processNumbers()">Process List</button>
+      <span id="processStatus" style="font-size:0.85rem;color:#888"></span>
+    </div>
+  </div>
+
+  <!-- Live Dashboard -->
+  <div class="card" id="dashboard">
+    <h2>Live Dashboard</h2>
+    <div class="progress-wrap"><div id="progressFill"></div></div>
+    <div id="progressLabel">Starting...</div>
+    <div class="dashboard-body">
+      <div class="chart-wrap">
+        <canvas id="pieChart"></canvas>
+      </div>
+      <div class="counters">
+        <div class="counter approved">
+          <span id="cntApproved">0</span>
+          <span>Approved</span>
+        </div>
+        <div class="counter nonmobile">
+          <span id="cntNonMobile">0</span>
+          <span>Non-Mobile</span>
+        </div>
+        <div class="counter inactive">
+          <span id="cntInactive">0</span>
+          <span>Inactive</span>
+        </div>
+        <div class="counter reassigned">
+          <span id="cntReassigned">0</span>
+          <span>Reassigned</span>
+        </div>
+        <div class="counter errors" style="grid-column: span 2;">
+          <span id="cntErrors">0</span>
+          <span>Errors / Invalid</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Report -->
+  <div class="card" id="resultsPanel">
+    <h2>Final Report</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Phone Number</th>
+            <th>Decision</th>
+            <th>Reason</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+    <div class="results-footer">
+      <button class="btn-success" onclick="downloadAuditTrail()">&#8595; Download Audit Trail (CSV)</button>
+      <span class="results-summary" id="resultsSummary"></span>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let phoneNumbers = [];
+  let results = [];
+  let chart = null;
+  let isProcessing = false;
+
+  // ── E.164 normalization ────────────────────────────────────────────────────
+  function normalizePhone(raw) {
+    const stripped = raw.replace(/[\s\-().]/g, '');
+    if (/^\d{10}$/.test(stripped)) return '+1' + stripped;
+    if (/^1\d{10}$/.test(stripped)) return '+' + stripped;
+    return stripped.startsWith('+') ? stripped : raw.trim();
+  }
+
+  // ── Counters ───────────────────────────────────────────────────────────────
+  function getCounters(res) {
+    return {
+      approved:   res.filter(r => r.decision === 'APPROVE').length,
+      nonMobile:  res.filter(r => r.reason === 'Non-Mobile').length,
+      inactive:   res.filter(r => r.reason === 'Inactive').length,
+      reassigned: res.filter(r => r.reason === 'Reassigned').length,
+      errors:     res.filter(r => r.reason === 'Error' || r.reason === 'Invalid').length,
+    };
+  }
+
+  // ── Single number check ────────────────────────────────────────────────────
+  async function checkSingleNumber() {
+    const raw = document.getElementById('singleNumber').value.trim();
+    const lastVerifiedDate = document.getElementById('lastVerifiedDate').value;
+    const el = document.getElementById('singleResult');
+    const btn = document.getElementById('checkBtn');
+
+    if (!raw) { showSingleResult(el, 'loading', 'Enter a phone number first.'); return; }
+
+    btn.disabled = true;
+    showSingleResult(el, 'loading', 'Checking...');
+
+    const phoneNumber = normalizePhone(raw);
+    const body = { phoneNumber };
+    if (lastVerifiedDate) body.lastVerifiedDate = lastVerifiedDate;
+
+    try {
+      const res = await fetch('/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      const cls = data.decision === 'APPROVE' ? 'approve' : 'remove';
+      let detail = `<strong>${data.decision}</strong> &mdash; ${data.reason}`;
+      if (data.lineType)   detail += ` &nbsp;|&nbsp; Type: <code>${data.lineType}</code>`;
+      if (data.lineStatus) detail += ` &nbsp;|&nbsp; Status: <code>${data.lineStatus}</code>`;
+      showSingleResult(el, cls, detail);
+    } catch (e) {
+      showSingleResult(el, 'remove', 'Request failed: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showSingleResult(el, type, html) {
+    el.className = type === 'loading' ? 'result-loading' : (type === 'approve' ? 'result-approve' : 'result-remove');
+    el.innerHTML = html;
+    el.style.display = 'block';
+  }
+
+  // ── CSV file handling ──────────────────────────────────────────────────────
+  const dropZone = document.getElementById('dropZone');
+  const csvFileInput = document.getElementById('csvFile');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  dropZone.addEventListener('click', () => csvFileInput.click());
+  csvFileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  function handleFile(file) {
+    Papa.parse(file, {
+      skipEmptyLines: true,
+      complete: function (parsed) {
+        let rows = parsed.data.map(row => String(row[0] ?? '').trim()).filter(Boolean);
+
+        // Skip header if it doesn't look like a phone number
+        if (rows.length > 0 && !/^[+\d]/.test(rows[0])) {
+          rows = rows.slice(1);
+        }
+
+        // Normalize and cap at 100
+        rows = rows.map(normalizePhone);
+        let truncated = false;
+        if (rows.length > 100) {
+          rows = rows.slice(0, 100);
+          truncated = true;
+        }
+
+        phoneNumbers = rows;
+        showCsvPreview(rows, truncated, file.name);
+        document.getElementById('processBtn').disabled = rows.length === 0;
+      },
+      error: function (err) {
+        alert('CSV parse error: ' + err.message);
+      }
+    });
+  }
+
+  function showCsvPreview(rows, truncated, filename) {
+    const el = document.getElementById('csvPreview');
+    if (rows.length === 0) {
+      el.innerHTML = '<em style="color:#c00">No phone numbers found in the first column.</em>';
+      return;
+    }
+    const preview = rows.slice(0, 5).map(n => `<div>${n}</div>`).join('');
+    const more = rows.length > 5 ? `<div style="color:#999">...and ${rows.length - 5} more</div>` : '';
+    el.innerHTML = `
+      <strong>${rows.length} number${rows.length !== 1 ? 's' : ''} loaded</strong> from <em>${filename}</em>
+      ${truncated ? '<span style="color:#e8175d"> (truncated to 100)</span>' : ''}
+      <div class="preview-numbers">${preview}${more}</div>
+    `;
+  }
+
+  // ── Batch processing ───────────────────────────────────────────────────────
+  async function processNumbers() {
+    if (isProcessing || phoneNumbers.length === 0) return;
+    isProcessing = true;
+
+    results = [];
+    const total = phoneNumbers.length;
+    const lastVerifiedDate = document.getElementById('lastVerifiedDate').value;
+
+    // Show dashboard
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('resultsPanel').style.display = 'none';
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('processStatus').textContent = 'Processing...';
+    resetChart();
+    updateDashboard([], total);
+
+    for (let i = 0; i < total; i++) {
+      const phoneNumber = phoneNumbers[i];
+      updateProgress(i, total);
+
+      let result;
+      try {
+        const body = { phoneNumber };
+        if (lastVerifiedDate) body.lastVerifiedDate = lastVerifiedDate;
+
+        const res = await fetch('/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        result = {
+          phoneNumber,
+          decision: data.decision,
+          reason: data.reason,
+          timestamp: new Date().toISOString()
+        };
+      } catch (fetchErr) {
+        result = {
+          phoneNumber,
+          decision: 'REMOVE',
+          reason: 'Error',
+          timestamp: new Date().toISOString()
+        };
+      }
+
+      results.push(result);
+      updateDashboard(results, total);
+    }
+
+    updateProgress(total, total);
+    document.getElementById('progressLabel').textContent = `Complete — processed ${total} number${total !== 1 ? 's' : ''}.`;
+    document.getElementById('processBtn').disabled = false;
+    document.getElementById('processStatus').textContent = '';
+    showFinalReport(results);
+    isProcessing = false;
+  }
+
+  function updateProgress(done, total) {
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    if (done < total) {
+      document.getElementById('progressLabel').textContent = `Processing ${done} / ${total}...`;
+    }
+  }
+
+  function updateDashboard(res, total) {
+    const c = getCounters(res);
+    document.getElementById('cntApproved').textContent  = c.approved;
+    document.getElementById('cntNonMobile').textContent = c.nonMobile;
+    document.getElementById('cntInactive').textContent  = c.inactive;
+    document.getElementById('cntReassigned').textContent= c.reassigned;
+    document.getElementById('cntErrors').textContent    = c.errors;
+
+    const removed = res.length - c.approved;
+    if (!chart) {
+      chart = new Chart(document.getElementById('pieChart'), {
+        type: 'pie',
+        data: {
+          labels: ['Approved', 'Removed'],
+          datasets: [{ data: [c.approved, removed], backgroundColor: ['#4caf50', '#e8175d'], borderWidth: 2 }]
+        },
+        options: {
+          animation: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 12 } } }
+          }
+        }
+      });
+    } else {
+      chart.data.datasets[0].data = [c.approved, removed];
+      chart.update('none');
+    }
+  }
+
+  function resetChart() {
+    if (chart) { chart.destroy(); chart = null; }
+  }
+
+  // ── Final report ───────────────────────────────────────────────────────────
+  function showFinalReport(res) {
+    const panel = document.getElementById('resultsPanel');
+    const tbody = document.getElementById('resultsBody');
+    panel.style.display = 'block';
+
+    tbody.innerHTML = res.map(r => {
+      const cls = r.decision === 'APPROVE' ? 'decision-approve' : 'decision-remove';
+      const ts = r.timestamp.replace('T', ' ').replace('Z', ' UTC').slice(0, 23);
+      return `<tr>
+        <td>${escHtml(r.phoneNumber)}</td>
+        <td class="${cls}">${escHtml(r.decision)}</td>
+        <td>${escHtml(r.reason)}</td>
+        <td style="color:#999;font-size:0.8rem">${ts}</td>
+      </tr>`;
+    }).join('');
+
+    const c = getCounters(res);
+    document.getElementById('resultsSummary').textContent =
+      `${c.approved} approved, ${res.length - c.approved} removed out of ${res.length} numbers`;
+
+    // Scroll to report
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── CSV export ─────────────────────────────────────────────────────────────
+  function downloadAuditTrail() {
+    if (results.length === 0) return;
+    const rows = [
+      ['Phone Number', 'Decision', 'Reason', 'Timestamp'],
+      ...results.map(r => [r.phoneNumber, r.decision, r.reason, r.timestamp])
+    ];
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `number-hygiene-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Utility ────────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Allow Enter key on single number input
+  document.getElementById('singleNumber').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkSingleNumber();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "number-hygiene-essentials",
+  "version": "1.0.0",
+  "description": "SMS compliance tool — Twilio Lookup v2 number scrubbing",
+  "scripts": {
+    "start": "twilio-run"
+  },
+  "devDependencies": {
+    "twilio-run": "^5.0.1"
+  }
+}
