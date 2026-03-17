@@ -8,7 +8,7 @@ exports.handler = async function (context, event, callback) {
 
   function respond(statusCode, body) {
     response.setStatusCode(statusCode);
-    response.setBody(JSON.stringify(body));
+    response.setBody(body);
     return callback(null, response);
   }
 
