@@ -35,14 +35,14 @@ Number Hygiene Essentials/
 ├── package.json                    # Project config; twilio-run dev dependency
 ├── .env.example                    # Credential template
 ├── functions/
-│   └── lookup.protected.js         # Backend: Lookup v2 waterfall logic
+│   └── lookup.js                   # Backend: Lookup v2 waterfall logic
 └── assets/
     └── index.html                  # Frontend: single-file SPA
 ```
 
 ### Key files
 
-- **[`functions/lookup.protected.js`](functions/lookup.protected.js)** — Node.js Twilio Function that accepts a phone number and optional last verified date, runs the 3-stage waterfall, and returns a JSON decision. The `.protected` filename infix enforces Twilio webhook signature validation.
+- **[`functions/lookup.js`](functions/lookup.js)** — Node.js Twilio Function that accepts a phone number and optional last verified date, runs the 3-stage waterfall, and returns a JSON decision.
 - **[`assets/index.html`](assets/index.html)** — Vanilla JS / HTML / CSS single-page app. Uses [PapaParse](https://www.papaparse.com/) for CSV parsing and [Chart.js](https://www.chartjs.org/) for the live pie chart. All session state is held client-side; no database is required.
 
 ---
@@ -107,7 +107,7 @@ The function endpoint is available at `http://localhost:3000/lookup` for direct 
 # Single number lookup with a last verified date
 curl -X POST http://localhost:3000/lookup \
   -H "Content-Type: application/json" \
-  -d '{"phoneNumber": "+15005550006", "lastVerifiedDate": "2025-01-15"}'
+  -d '{"phoneNumber": "+16127491497", "lastVerifiedDate": "2025-01-15"}'
 ```
 
 Example response:
