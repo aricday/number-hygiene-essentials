@@ -17,7 +17,7 @@
     }
 
     header {
-      background: #e8175d;
+      background: #000;
       color: #fff;
       padding: 24px 32px;
     }
@@ -67,7 +67,7 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    input:focus { border-color: #e8175d; }
+    input:focus { border-color: #F22F46; }
 
     .row { display: flex; gap: 12px; align-items: flex-end; }
     .row input { flex: 1; }
@@ -84,8 +84,8 @@
     }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .btn-primary { background: #e8175d; color: #fff; }
-    .btn-primary:not(:disabled):hover { background: #c41250; }
+    .btn-primary { background: #000; color: #fff; }
+    .btn-primary:not(:disabled):hover { background: #333; }
     .btn-secondary { background: #f0f0f0; color: #333; }
     .btn-secondary:not(:disabled):hover { background: #e0e0e0; }
     .btn-success { background: #4caf50; color: #fff; }
@@ -116,9 +116,9 @@
       user-select: none;
     }
     #dropZone:hover, #dropZone.drag-over {
-      border-color: #e8175d;
+      border-color: #F22F46;
       background: #fff0f4;
-      color: #e8175d;
+      color: #F22F46;
     }
     #dropZone .icon { font-size: 2rem; margin-bottom: 8px; }
     #csvPreview {
@@ -151,7 +151,7 @@
     }
     #progressFill {
       height: 100%;
-      background: #e8175d;
+      background: #F22F46;
       border-radius: 99px;
       width: 0%;
       transition: width 0.3s ease;
@@ -443,7 +443,7 @@
     const more = rows.length > 5 ? `<div style="color:#999">...and ${rows.length - 5} more</div>` : '';
     el.innerHTML = `
       <strong>${rows.length} number${rows.length !== 1 ? 's' : ''} loaded</strong> from <em>${filename}</em>
-      ${truncated ? '<span style="color:#e8175d"> (truncated to 100)</span>' : ''}
+      ${truncated ? '<span style="color:#F22F46"> (truncated to 100)</span>' : ''}
       <div class="preview-numbers">${preview}${more}</div>
     `;
   }
@@ -529,7 +529,7 @@
         type: 'pie',
         data: {
           labels: ['Approved', 'Removed'],
-          datasets: [{ data: [c.approved, removed], backgroundColor: ['#4caf50', '#e8175d'], borderWidth: 2 }]
+          datasets: [{ data: [c.approved, removed], backgroundColor: ['#4caf50', '#F22F46'], borderWidth: 2 }]
         },
         options: {
           animation: false,
