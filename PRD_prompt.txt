@@ -1,0 +1,35 @@
+Lookup Bundling App Build - Marketing Number Hygiene
+
+I would lke to create a PRD for an application build. This application will allow SMS Marketers to ensure they message only reachable, consented numbers and follow all compliance requirements. This PRD will define all the necessary components to build a Web Application that meets all the requirements.  The Application will be using Twilio Lookup to provide a "Number Hygiene Essentials" application that evaluates a single number (via the web UI) or a csv file upload to provide a decision based on the following orchestration criteria.
+ 
+ 	
+1) Evaluate the Line Type Intelligence (LTI): Filter out unwanted line types 
+  - Remove if type = landline or voip 
+  - Continue to next lookup if type = mobile
+
+2) Evaluate the Line Status: Verify the line status of numbers that have not been filtered out
+  - Remove if status = inactive or unreachable
+  - Continue to next lookup if status = active, reachable or unknown
+
+3) Evaluate the Reassigned Number: Check if the number still has the same owner
+  - Remove if number is reassigned = yes
+  - Approve the status if number is reassigned = no
+
+I would like to build this project entirely using the Twilio platorm, including Twilio Functions and Assets, Twilio Lookup API and any other required Twilio features along with using a Node.js base language. 
+
+We will limit the CSV file to maximum of 100 numbers.  
+
+Once the "Decision" is made (Approve/Remove), show a live dashboard.  
+
+I would like to store the audit trail of these lookups into a csv file.  "Last Verified Date"  field would be a single input for all number in the UI.
+---
+-------
+* Download the resulting PRD
+-------
+* Enter PLAN mode
+Prompt:  Hi Claude, I would like to build an application following the PRD attached.  
+-------
+Review the plan and approve/edit as needed.  Once it is complete, allow the program to build the components
+-------
+Request a README.md file to be created in the project directory, with project summary and instructions.
+----------------
