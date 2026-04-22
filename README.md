@@ -4,6 +4,28 @@ A compliance-focused SMS list scrubbing tool built on Twilio Serverless (Functio
 
 ---
 
+## Why This Matters for SMS Marketers
+
+Every SMS marketing list degrades over time. Phone numbers get disconnected, recycled to new subscribers, or were never valid for SMS in the first place. Sending to dirty lists creates three compounding problems:
+
+1. **Wasted spend** — carriers charge per send attempt regardless of deliverability
+2. **Sender reputation damage** — high bounce and complaint rates can trigger carrier filtering, throttling, or blocking of your entire sending domain
+3. **Compliance liability** — under TCPA, sending to a recycled number (now owned by someone who never opted in) can expose you to statutory damages per message
+
+Number Hygiene Essentials solves this by running every number through a 3-stage validation waterfall before your campaign launches:
+
+| Stage | What It Checks | Why It Matters |
+|-------|---------------|----------------|
+| **Line Type** | Is this actually a mobile number? | Landlines and VoIP numbers can never receive SMS — immediate remove |
+| **Line Status** | Is the line currently active? | Disconnected/suspended lines generate bounces and harm deliverability scores |
+| **Reassignment** | Has this number been recycled to a new owner since you last verified? | Prevents accidental contact with non-consented subscribers — TCPA risk reduction |
+
+Processing stops at the first failure, so you're not paying for three API lookups on a number that fails Stage 1.
+
+At scale, removing even 5–10% of a list before sending eliminates those sends entirely — reducing direct message costs, protecting sender reputation that affects the entire list's deliverability, and creating a defensible paper trail if a TCPA complaint arises.
+
+---
+
 ## How It Works
 
 Numbers are processed through three sequential stages using the [Twilio Lookup v2 API](https://www.twilio.com/docs/lookup/v2-api). If a number fails any stage, processing stops immediately for that number, saving on API costs.
